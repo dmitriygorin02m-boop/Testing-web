@@ -2,30 +2,41 @@
 image: Visual Studio 2022
 
 install:
-  - ps: |
-      Write-Host "JAVA_HOME=$env:JAVA_HOME"
-      Write-Host "Checking installed Java versions..."
-
-      Get-ChildItem 'C:\Program Files\Java' -Directory | Select-Object FullName
-
-      Write-Host "Checking JDK 11..."
-      Test-Path 'C:\Program Files\Java\jdk11\bin\java.exe'
-
-      if (Test-Path 'C:\Program Files\Java\jdk11\bin\java.exe') {
-        $env:JAVA_HOME = 'C:\Program Files\Java\jdk11'
-      } else {
-        throw "JDK 11 was not found!"
-      }
-
-      $env:Path = "$env:JAVA_HOME\bin;$env:Path"
-
-      & "$env:JAVA_HOME\bin\java.exe" -version
-      & "$env:JAVA_HOME\bin\javac.exe" -version
-
-      Start-Process -FilePath "$env:JAVA_HOME\bin\java.exe" -ArgumentList '-jar', './artifacts/app-order.jar' -WorkingDirectory $env:APPVEYOR_BUILD_FOLDER
+    - ps: |
+          Write-Host "Installing Java 11..."
+          choco install temurin11 -y --params='/ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJavaHome /quiet'
+          
+          $jdk = Get-ChildItem 'C:\Program Files\Eclipse Adoptium' -Directory |
+            Where-Object { $_.Name -like 'jdk-11*' } |
+            Select-Object -First 1
+          
+          if (-not $jdk) {
+            throw "JDK 11 installation failed!"
+          }
+          
+          $env:JAVA_HOME = $jdk.FullName
+          $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+          
+          java -version
+          javac -version
+          
+          Write-Host "Starting application..."
+          Start-Process -FilePath "$env:JAVA_HOME\bin\java.exe" `
+            -ArgumentList '-jar', './artifacts/app-order.jar' `
+            -WorkingDirectory $env:APPVEYOR_BUILD_FOLDER
 
 build_script:
-  - ps: |
-      $env:JAVA_HOME = 'C:\Program Files\Java\jdk11'
-      $env:Path = "$env:JAVA_HOME\bin;$env:Path"
-      .\gradlew.bat clean build
+    - ps: |
+          $jdk = Get-ChildItem 'C:\Program Files\Eclipse Adoptium' -Directory |
+            Where-Object { $_.Name -like 'jdk-11*' } |
+            Select-Object -First 1
+          
+          if (-not $jdk) {
+            throw "JDK 11 was not found!"
+          }
+          
+          $env:JAVA_HOME = $jdk.FullName
+          $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+          
+          java -version
+          .\gradlew.bat clean build
