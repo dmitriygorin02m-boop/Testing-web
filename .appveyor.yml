@@ -39,9 +39,9 @@ build_script:
                   
                   Write-Host "JAVA_HOME: $env:JAVA_HOME"
                   Write-Host "Checking Java version:"
-                  
-                  java -version
-                  javac -version
+            
+            java -version 2>&1 | ForEach-Object { Write-Host $_ }
+            javac -version 2>&1 | ForEach-Object { Write-Host $_ }
                   
                   Write-Host "Starting application..."
                   
