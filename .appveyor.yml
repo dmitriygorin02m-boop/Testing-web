@@ -1,0 +1,17 @@
+
+image: Visual Studio 2022
+
+environment:
+  JAVA_HOME: 'C:\Program Files\Java\jdk11'
+
+install:
+  - ps: |
+      $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+      java -version
+      javac -version
+      Start-Process -FilePath "$env:JAVA_HOME\bin\java.exe" -ArgumentList '-jar', './artifacts/app-order.jar'
+
+build_script:
+  - ps: |
+      $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+      .\gradlew.bat clean build
